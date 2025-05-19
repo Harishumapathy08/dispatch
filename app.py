@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
+import io
+import xlsxwriter
 
 DATA_FILE = "dispatch_data.csv"
 
@@ -21,10 +23,8 @@ st.title("📦 Dispatch Entry Form")
 
 with st.form("dispatch_form"):
     inv_date = st.date_input("INV DATE")
-
-    # ✅ Numeric INV No input
     inv_no = st.number_input("INV No", min_value=1, step=1, format="%d")
-    inv_no = str(int(inv_no))
+    inv_no = str(int(inv_no))  # Convert to string
 
     customer = st.text_input("CUSTOMER")
     sales_person = st.text_input("SALES PERSON")
@@ -48,12 +48,11 @@ with st.form("dispatch_form"):
     ackn_sent_date = st.date_input("ACKN SENT DATE")
     ackn_sent_by = st.text_input("ACKN SENT BY")
 
-    submitted = st.form_submit_button("Save Entry")
+    submitted = st.form_submit_button("✅ Save Entry")
     refresh = st.form_submit_button("🔄 Refresh Form")
 
-    if st.session_state.get("refresh_triggered"):
-       st.session_state["refresh_triggered"] = False
-       st.experimental_rerun()
+    if refresh:
+        st.experimental_rerun()
 
     if submitted:
         if inv_no.strip() == "":
@@ -107,12 +106,14 @@ with st.form("dispatch_form"):
                 st.success(f"✅ Saved new entry for INV No {inv_no}.")
             df.to_csv(DATA_FILE, index=False)
 
-# Load/Delete Section
+# ------------------------
+# 🔍 Load/Delete Section
+# ------------------------
 st.subheader("🔍 Load or Delete Entry")
 load_inv = st.text_input("Enter Invoice No to Load or Delete")
 col1, col2 = st.columns(2)
 
-if col1.button("Load Entry"):
+if col1.button("📂 Load Entry"):
     entry = df[df["INV No"].astype(str) == load_inv.strip()]
     if not entry.empty:
         st.write("### Entry Found:")
@@ -120,7 +121,7 @@ if col1.button("Load Entry"):
     else:
         st.warning("No entry found with that Invoice No.")
 
-if col2.button("Delete Entry"):
+if col2.button("🗑️ Delete Entry"):
     if load_inv.strip() in df["INV No"].astype(str).values:
         df = df[df["INV No"].astype(str) != load_inv.strip()].reset_index(drop=True)
         df["S.No"] = range(1, len(df) + 1)
@@ -128,3 +129,21 @@ if col2.button("Delete Entry"):
         st.success(f"🗑️ Entry with Invoice No {load_inv.strip()} deleted.")
     else:
         st.warning("Invoice No not found.")
+
+# ------------------------
+# 📥 Download as Excel
+# ------------------------
+def to_excel(df):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Dispatch Data')
+    return output.getvalue()
+
+st.subheader("📤 Export Data")
+excel_data = to_excel(df)
+st.download_button(
+    label="📥 Download Full Data as Excel",
+    data=excel_data,
+    file_name='dispatch_data.xlsx',
+    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+)
