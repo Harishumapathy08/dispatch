@@ -22,7 +22,7 @@ def load_data():
 def save_data(df):
     df.to_excel(DATA_FILE, index=False, engine='openpyxl')
 
-st.title("🚚 KMS Dispatch Entry System")
+st.title("🚚 Dispatch Entry System")
 
 df = load_data()
 
@@ -86,6 +86,7 @@ if not df.empty:
         file_name="dispatch_data.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 
 
