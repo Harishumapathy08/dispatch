@@ -49,7 +49,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🚚 Dispatch Entry System")
+st.title("🚚 KMS Dispatch Entry System")
 
 # Summary
 st.subheader("📊 Summary")
