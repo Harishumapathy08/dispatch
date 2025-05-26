@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 
 st.set_page_config(layout="wide")
-
 DATA_FILE = 'data/dispatch_data.xlsx'
 os.makedirs("data", exist_ok=True)
 
@@ -22,60 +21,94 @@ def load_data():
 def save_data(df):
     df.to_excel(DATA_FILE, index=False, engine='openpyxl')
 
+# Custom styling from original CSS converted for Streamlit
+st.markdown("""
+    <style>
+    .stTextInput>div>div>input {
+        background-color: #f9f9f9;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    .stSelectbox>div>div>div {
+        background-color: #f9f9f9;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    .stDateInput>div>div>input, .stTimeInput>div>div>input {
+        background-color: #f9f9f9;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    .stButton>button {
+        padding: 10px 20px;
+        background-color: #1a73e8;
+        color: white;
+        border-radius: 6px;
+        border: none;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #0f5fc0;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🚚 Dispatch Entry System")
 
 df = load_data()
 
-# Summary
-st.subheader("📊 Summary Dashboard")
+# Summary Metrics
+st.subheader("📊 Summary")
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Dispatches", len(df))
 col2.metric("Total Quantity", df["QTY"].sum() if not df.empty else 0)
 col3.metric("Total Freight", f"₹{df["FREIGHT AMT"].sum() if not df.empty else 0}")
 
-# Form
+# Dispatch Entry Form
+st.subheader("➕ Add Dispatch Record")
 with st.form("entry_form"):
-    st.subheader("➕ New Dispatch Entry")
-    c1, c2 = st.columns(2)
-    inv_date = c1.date_input("INV DATE")
-    inv_no = c2.text_input("INV No")
-    customer = c1.text_input("CUSTOMER")
-    salesperson = c2.text_input("SALES PERSON")
-    saletype = c1.selectbox("SALE TYPE", ["cash", "credit"])
-    product = c2.text_input("PRODUCT")
-    model = c1.text_input("MODEL")
-    color = c2.text_input("COLOUR")
-    qty = c1.number_input("QTY", 0)
-    place = c2.text_input("PLACE")
-    desp_date = c1.date_input("DESP DATE")
-    time = c2.time_input("DESPATCH TIME")
-    transport = c1.text_input("TRANSPORT")
-    lr = c2.text_input("LR NUMBER")
-    vehicle = c1.text_input("VEHICLE NUMBER")
-    size = c2.selectbox("VEHICLE SIZE", ["14 feet", "17 feet", "19 feet", "22 feet", "25 feet", "Other"])
-    freight = c1.number_input("FREIGHT AMT", 0.0)
-    payment_terms = c2.text_input("PAYMENT TERMS")
-    payment_status = c1.selectbox("PAYMENT STATUS", ["paid", "pending"])
-    remarks = c2.text_input("REMARKS")
-    ack_status = c1.selectbox("ACKN STATUS", ["ok", "pending"])
-    ack_date = c2.date_input("ACKN SENT DATE")
-    ack_by = c1.text_input("ACKN SENT BY")
+    col1, col2 = st.columns(2)
+    inv_date = col1.date_input("INV DATE")
+    inv_no = col2.text_input("INV No")
+    customer = col1.text_input("CUSTOMER")
+    salesperson = col2.text_input("SALES PERSON")
+    saletype = col1.selectbox("SALE TYPE", ["cash", "credit"])
+    product = col2.text_input("PRODUCT")
+    model = col1.text_input("MODEL")
+    color = col2.text_input("COLOUR")
+    qty = col1.number_input("QTY", 0)
+    place = col2.text_input("PLACE")
+    desp_date = col1.date_input("DESP DATE")
+    time = col2.time_input("DESPATCH TIME")
+    transport = col1.text_input("TRANSPORT")
+    lr = col2.text_input("LR NUMBER")
+    vehicle = col1.text_input("VEHICLE NUMBER")
+    size = col2.selectbox("VEHICLE SIZE", ["14 feet", "17 feet", "19 feet", "22 feet", "25 feet", "Other"])
+    freight = col1.number_input("FREIGHT AMT", 0.0)
+    payment_terms = col2.text_input("PAYMENT TERMS")
+    payment_status = col1.selectbox("PAYMENT STATUS", ["paid", "pending"])
+    remarks = col2.text_input("REMARKS")
+    ack_status = col1.selectbox("ACKN STATUS", ["ok", "pending"])
+    ack_date = col2.date_input("ACKN SENT DATE")
+    ack_by = col1.text_input("ACKN SENT BY")
 
     submitted = st.form_submit_button("Submit")
     if submitted:
-        row = [len(df)+1, inv_date, inv_no, customer, salesperson, saletype, product, model, color, qty,
-               place, desp_date, time.strftime('%H:%M'), transport, lr, vehicle, size, freight,
-               payment_terms, payment_status, remarks, ack_status, ack_date, ack_by]
-        df.loc[len(df)] = row
+        new_row = [len(df)+1, inv_date, inv_no, customer, salesperson, saletype, product, model, color, qty,
+                   place, desp_date, time.strftime('%H:%M'), transport, lr, vehicle, size, freight,
+                   payment_terms, payment_status, remarks, ack_status, ack_date, ack_by]
+        df.loc[len(df)] = new_row
         save_data(df)
         st.success("✅ Entry added successfully!")
         st.experimental_rerun()
 
-# Table View
+# Record Viewer
 st.subheader("📋 Dispatch Records")
 st.dataframe(df, use_container_width=True)
 
-# Download Button
+# Excel Download
 if not df.empty:
     buffer = io.BytesIO()
     df.to_excel(buffer, index=False, engine='openpyxl')
