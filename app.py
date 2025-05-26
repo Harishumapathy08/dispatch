@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
+import io
 import os
+from datetime import datetime
 
 st.set_page_config(layout="wide")
 
@@ -18,7 +20,7 @@ def load_data():
     return pd.read_excel(DATA_FILE) if os.path.exists(DATA_FILE) else pd.DataFrame(columns=columns)
 
 def save_data(df):
-    df.to_excel(DATA_FILE, index=False)
+    df.to_excel(DATA_FILE, index=False, engine='openpyxl')
 
 st.title("🚚 Dispatch Entry System")
 
@@ -29,7 +31,7 @@ st.subheader("📊 Summary Dashboard")
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Dispatches", len(df))
 col2.metric("Total Quantity", df["QTY"].sum() if not df.empty else 0)
-col3.metric("Total Freight", f"₹{df['FREIGHT AMT'].sum() if not df.empty else 0}")
+col3.metric("Total Freight", f"₹{df["FREIGHT AMT"].sum() if not df.empty else 0}")
 
 # Form
 with st.form("entry_form"):
@@ -66,14 +68,24 @@ with st.form("entry_form"):
                payment_terms, payment_status, remarks, ack_status, ack_date, ack_by]
         df.loc[len(df)] = row
         save_data(df)
-        st.success("Entry added successfully!")
+        st.success("✅ Entry added successfully!")
+        st.experimental_rerun()
 
-# Table
+# Table View
 st.subheader("📋 Dispatch Records")
-st.dataframe(df)
+st.dataframe(df, use_container_width=True)
 
-# Download
+# Download Button
 if not df.empty:
-    st.download_button("⬇️ Download Excel", df.to_excel(index=False), "dispatch_data.xlsx")
+    buffer = io.BytesIO()
+    df.to_excel(buffer, index=False, engine='openpyxl')
+    buffer.seek(0)
+    st.download_button(
+        label="⬇️ Download Excel",
+        data=buffer,
+        file_name="dispatch_data.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
 
 
