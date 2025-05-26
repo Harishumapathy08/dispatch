@@ -22,7 +22,7 @@ def load_data():
 def save_data(df):
     df.to_excel(DATA_FILE, index=False, engine='openpyxl')
 
-st.title("🚚 Dispatch Entry System")
+st.title("🚚 KMS Dispatch Entry System")
 
 df = load_data()
 
