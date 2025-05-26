@@ -49,7 +49,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🚚 KMS Dispatch Entry System")
+st.title("🚚 Dispatch Entry System")
 
 # Summary
 st.subheader("📊 Summary")
@@ -127,6 +127,7 @@ if not df.empty:
         file_name="dispatch_data.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 
 
