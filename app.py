@@ -94,11 +94,10 @@ with st.form("entry_form"):
         df.loc[len(df)] = new_row
         save_data(df)
         st.success("✅ Entry added successfully!")
-        st.experimental_rerun()
+        st.session_state["just_added"] = not st.session_state.get("just_added", False)
 
 # View & Delete Records
 st.subheader("📋 Dispatch Records")
-
 if not df.empty:
     for i, row in df.iterrows():
         with st.expander(f"🔎 Record {int(row['S.No'])} - {row['CUSTOMER']}"):
@@ -112,7 +111,7 @@ if not df.empty:
                 df["S.No"] = df.index + 1
                 save_data(df)
                 st.success("🗑 Record deleted successfully!")
-                st.experimental_rerun()
+                st.session_state["just_deleted"] = not st.session_state.get("just_deleted", False)
 else:
     st.info("No dispatch records available.")
 
@@ -127,6 +126,7 @@ if not df.empty:
         file_name="dispatch_data.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 
 
