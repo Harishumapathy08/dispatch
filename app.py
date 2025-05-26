@@ -21,23 +21,17 @@ def load_data():
 def save_data(df):
     df.to_excel(DATA_FILE, index=False, engine='openpyxl')
 
-# Custom styling from original CSS converted for Streamlit
+df = load_data()
+
+# Style
 st.markdown("""
     <style>
-    .stTextInput>div>div>input {
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>div,
+    .stDateInput>div>div>input,
+    .stTimeInput>div>div>input {
         background-color: #f9f9f9;
         padding: 10px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-    }
-    .stSelectbox>div>div>div {
-        background-color: #f9f9f9;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-    }
-    .stDateInput>div>div>input, .stTimeInput>div>div>input {
-        background-color: #f9f9f9;
-        padding: 8px;
         border-radius: 6px;
         border: 1px solid #ccc;
     }
@@ -57,16 +51,14 @@ st.markdown("""
 
 st.title("🚚 Dispatch Entry System")
 
-df = load_data()
-
-# Summary Metrics
+# Summary
 st.subheader("📊 Summary")
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Dispatches", len(df))
 col2.metric("Total Quantity", df["QTY"].sum() if not df.empty else 0)
 col3.metric("Total Freight", f"₹{df["FREIGHT AMT"].sum() if not df.empty else 0}")
 
-# Dispatch Entry Form
+# Add Entry Form
 st.subheader("➕ Add Dispatch Record")
 with st.form("entry_form"):
     col1, col2 = st.columns(2)
@@ -104,9 +96,25 @@ with st.form("entry_form"):
         st.success("✅ Entry added successfully!")
         st.experimental_rerun()
 
-# Record Viewer
+# View & Delete Records
 st.subheader("📋 Dispatch Records")
-st.dataframe(df, use_container_width=True)
+
+if not df.empty:
+    for i, row in df.iterrows():
+        with st.expander(f"🔎 Record {int(row['S.No'])} - {row['CUSTOMER']}"):
+            cols = st.columns(2)
+            for j, col in enumerate(columns[1:]):
+                with cols[j % 2]:
+                    st.write(f"**{col}:** {row[col]}")
+            if st.button(f"🗑 Delete Record {int(row['S.No'])}", key=f"delete_{i}"):
+                df = df[df["S.No"] != row["S.No"]]
+                df.reset_index(drop=True, inplace=True)
+                df["S.No"] = df.index + 1
+                save_data(df)
+                st.success("🗑 Record deleted successfully!")
+                st.experimental_rerun()
+else:
+    st.info("No dispatch records available.")
 
 # Excel Download
 if not df.empty:
@@ -119,6 +127,7 @@ if not df.empty:
         file_name="dispatch_data.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 
 
